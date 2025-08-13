@@ -225,9 +225,9 @@
     <section id="appSection" class="stack hidden">
       <div class="toolbar">
         <button id="btnSelectFiles" class="btn primary">+ 画像を追加</button>
-        <button id="btnUpload" class="btn success" disabled>アップロード</button>
+        <button id="btnUpload" class="btn success hidden" disabled>アップロード</button>
         <button id="btnCreateFolder" class="btn ghost">📁 フォルダ作成</button>
-        <span id="uploadHint" class="muted">最大10枚まで同時にアップロードできます</span>
+        <span id="uploadHint" class="muted">写真を選ぶと自動でアップロードされます (最大10枚)</span>
         <input id="fileInput" type="file" accept="image/*" multiple hidden>
       </div>
       
@@ -390,7 +390,7 @@
 
     const fileInput = document.getElementById('fileInput');
     const btnSelectFiles = document.getElementById('btnSelectFiles');
-    const btnUpload = document.getElementById('btnUpload');
+    const btnUpload = document.getElementById('btnUpload'); // 自動アップロードのために参照は残す
     const progressBox = document.getElementById('progressBox');
     const progressBar = document.getElementById('progressBar');
     const photoGrid = document.getElementById('photoGrid');
@@ -566,8 +566,10 @@
     
     fileInput.addEventListener('change', ()=> {
       selectedFiles = Array.from(fileInput.files || []).slice(0,10);
-      btnUpload.disabled = selectedFiles.length===0;
-      document.getElementById('uploadHint').textContent = selectedFiles.length ? `${selectedFiles.length} 件選択中` : '最大10枚まで同時にアップロードできます';
+      if (selectedFiles.length > 0) {
+        document.getElementById('uploadHint').textContent = `${selectedFiles.length} 件アップロード中...`;
+        btnUpload.click();
+      }
     });
 
     btnUpload.addEventListener('click', async ()=> {
@@ -577,7 +579,7 @@
       try {
         show(progressBox); 
         progressBar.style.width = '0%';
-        btnUpload.disabled = true;
+        // btnUpload.disabled = true; // 自動アップロードのため不要
 
         let completed = 0;
         for(const file of selectedFiles){
@@ -613,7 +615,8 @@
         }
 
         await sleep(250);
-        toast('アップロード完了！', 'success');
+        toast(`${selectedFiles.length} 件のアップロードが完了しました！`, 'success');
+        document.getElementById('uploadHint').textContent = '写真を選ぶと自動でアップロードされます (最大10枚)';
         
       } catch(error) {
         console.error('アップロードエラー:', error);
@@ -621,7 +624,7 @@
       } finally {
         hide(progressBox); 
         progressBar.style.width = '0%';
-        btnUpload.disabled = false;
+        // btnUpload.disabled = false; // 自動アップロードのため不要
         selectedFiles = []; 
         fileInput.value = '';
         document.getElementById('uploadHint').textContent = '最大10枚まで同時にアップロードできます';
