@@ -3,208 +3,287 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Startpage · Firebase Sync (Photos + Settings)</title>
+  <title>Photo Manager · Firebase Sync</title>
   <style>
-    :root{--bg:#0f1115;--card:#151821;--muted:#aab2c0;--text:#e9edf1;--acc:#4ea1ff;}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans JP, sans-serif}
-    header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;background:#0c0e12;border-bottom:1px solid #1e2230;position:sticky;top:0;z-index:100}
-    .btn{appearance:none;border:1px solid #2a3040;background:#1a1f2b;color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer;font-size:14px}
-    .btn:hover{border-color:#3b4256}
-    .btn.primary{background:var(--acc);color:white;border-color:transparent}
-    .btn.success{background:#22c55e;color:white;border-color:transparent}
-    .btn.ghost{background:transparent}
-    .btn:disabled{opacity:0.5;cursor:not-allowed}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-    .card{background:var(--card);border:1px solid #1f2432;border-radius:14px;overflow:hidden;position:relative;transition:transform 0.2s}
-    .card:hover{transform:translateY(-2px)}
-    .card > img{width:100%;height:200px;object-fit:cover;display:block;background:#0b0d11;cursor:pointer;transition:opacity 0.2s}
-    .card > img:hover{opacity:0.8}
-    .row{display:flex;gap:8px;align-items:center}
-    .stack{display:flex;flex-direction:column;gap:10px}
-    .muted{color:var(--muted)}
-    .hidden{display:none!important}
-    .wrap{max-width:1200px;margin:0 auto;padding:16px}
-    input, select, textarea{background:#161a24;color:var(--text);border:1px solid #2a3040;border-radius:10px;padding:9px 12px;outline:none;width:100%}
-    input[type="file"]{padding:12px}
-    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
-    .chip{font-size:12px;padding:4px 8px;border:1px solid #2a3040;border-radius:999px;color:var(--muted);background:var(--card)}
-    .tag{font-size:11px;padding:2px 6px;border:1px solid var(--acc);border-radius:999px;color:var(--acc);background:rgba(78,161,255,0.1);margin:2px}
-    .danger{color:#ff647c}
-    .success{color:#22c55e}
-    .progress{height:8px;background:#12151d;border:1px solid #23293a;border-radius:999px;overflow:hidden}
-    .progress > div{height:100%;width:0;background:var(--acc);transition:width .2s linear}
-    .center{display:flex;align-items:center;justify-content:center}
-    .folder-nav{display:flex;gap:4px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-    .folder-btn{background:var(--card);border:1px solid #2a3040;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px}
-    .folder-btn.active{background:var(--acc);color:white;border-color:transparent}
-    
-    /* 削除ボタン */
-    .delete-btn{
-      position:absolute;
-      top:8px;
-      right:8px;
-      background:rgba(255,100,124,0.9);
-      color:white;
-      border:none;
-      border-radius:50%;
-      width:28px;
-      height:28px;
-      cursor:pointer;
-      font-size:14px;
-      line-height:1;
-      opacity:0;
-      transition:opacity 0.2s;
+    :root {
+      --bg: #0f1115;
+      --card: #151821;
+      --muted: #aab2c0;
+      --text: #e9edf1;
+      --acc: #4ea1ff;
     }
-    .card:hover .delete-btn{opacity:1}
-    .delete-btn:hover{background:rgba(255,100,124,1)}
-    
-    /* 選択チェックボックス */
-    .select-checkbox{
-      position:absolute;
-      top:8px;
-      left:8px;
-      width:20px;
-      height:20px;
-      opacity:0;
-      transition:opacity 0.2s;
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans JP, sans-serif;
     }
-    .card:hover .select-checkbox{opacity:1}
-    
-    /* 編集ボタン */
-    .edit-btn{
-      position:absolute;
-      top:8px;
-      right:42px;
-      background:rgba(78,161,255,0.9);
-      color:white;
-      border:none;
-      border-radius:50%;
-      width:28px;
-      height:28px;
-      cursor:pointer;
-      font-size:12px;
-      line-height:1;
-      opacity:0;
-      transition:opacity 0.2s;
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 14px 16px;
+      background: #0c0e12;
+      border-bottom: 1px solid #1e2230;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .card:hover .edit-btn{opacity:1}
-    .edit-btn:hover{background:rgba(78,161,255,1)}
-    
-    /* モーダル */
-    .modal{
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      background:rgba(0,0,0,0.9);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      cursor:pointer;
+
+    .btn {
+      appearance: none;
+      border: 1px solid #2a3040;
+      background: #1a1f2b;
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
     }
-    .modal img{
-      max-width:90%;
-      max-height:90%;
-      object-fit:contain;
-      border-radius:8px;
+
+    .btn:hover {
+      border-color: #3b4256;
     }
-    .modal-info{
-      position:absolute;
-      bottom:20px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,0.8);
-      color:white;
-      padding:8px 16px;
-      border-radius:20px;
-      font-size:12px;
-      max-width:80%;
-      text-align:center;
+
+    .btn.primary {
+      background: var(--acc);
+      color: white;
+      border-color: transparent;
     }
-    
-    /* 画像情報 */
-    .card-info{
-      position:absolute;
-      bottom:0;
-      left:0;
-      right:0;
-      background:linear-gradient(transparent, rgba(0,0,0,0.8));
-      color:white;
-      padding:12px 10px 8px;
-      font-size:11px;
-      line-height:1.3;
+
+    .btn.success {
+      background: #22c55e;
+      color: white;
+      border-color: transparent;
     }
-    .card-name{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      margin-bottom:4px;
-      font-weight:500;
+
+    .btn.ghost {
+      background: transparent;
     }
-    .card-tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap:2px;
-      margin-top:4px;
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-    .card-folder{
-      font-size:10px;
-      opacity:0.8;
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
     }
-    
-    /* フォームモーダル */
-    .form-modal{
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      background:rgba(0,0,0,0.8);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
+
+    .card {
+      background: var(--card);
+      border: 1px solid #1f2432;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.2s;
     }
-    .form-modal-content{
-      background:var(--card);
-      border:1px solid #2a3040;
-      border-radius:12px;
-      padding:20px;
-      max-width:500px;
-      width:90%;
-      max-height:80vh;
-      overflow-y:auto;
+
+    .card:hover {
+      transform: translateY(-2px);
     }
-    
-    /* 画像編集キャンバス */
-    .canvas-container{
-      position:relative;
-      max-width:100%;
-      margin:10px 0;
+
+    .card > img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      background: #0b0d11;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
-    .edit-controls{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
-      gap:8px;
-      margin:10px 0;
+
+    .card > img:hover {
+      opacity: 0.8;
     }
-    
-    /* 一括選択バー */
-    .bulk-actions{
-      position:fixed;
-      bottom:20px;
-      left:50%;
-      transform:translateX(-50%);
-      background:var(--card);
-      border:1px solid #2a3040;
-      border-radius:12px;
-      padding:12px 16px;
-      display:none;
-      gap:8px;
-      align-items:center;
-      box-shadow:0 4px 12px rgba(0,0,0,0.3);
-      z-index:1000;
+
+    .delete-btn,
+    .edit-btn {
+      position: absolute;
+      top: 8px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-    .bulk-actions.show{display:flex}
+
+    .delete-btn {
+      right: 8px;
+      background: rgba(255, 100, 124, 0.9);
+    }
+
+    .edit-btn {
+      right: 42px;
+      background: rgba(78, 161, 255, 0.9);
+      font-size: 12px;
+    }
+
+    .card:hover .delete-btn,
+    .card:hover .edit-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 100, 124, 1);
+    }
+
+    .edit-btn:hover {
+      background: rgba(78, 161, 255, 1);
+    }
+
+    .select-checkbox {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 20px;
+      height: 20px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card:hover .select-checkbox {
+      opacity: 1;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    .modal img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .modal-info {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      max-width: 80%;
+      text-align: center;
+    }
+
+    .card-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+      color: white;
+      padding: 12px 10px 8px;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .card-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border: 1px solid var(--acc);
+      border-radius: 999px;
+      color: var(--acc);
+      background: rgba(78, 161, 255, 0.1);
+      margin: 2px;
+    }
+
+    .card-folder {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    input, select, textarea {
+      background: #161a24;
+      color: var(--text);
+      border: 1px solid #2a3040;
+      border-radius: 10px;
+      padding: 9px 12px;
+      outline: none;
+      width: 100%;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .folder-nav {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .folder-btn {
+      background: var(--card);
+      border: 1px solid #2a3040;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .folder-btn.active {
+      background: var(--acc);
+      color: white;
+      border-color: transparent;
+    }
   </style>
 </head>
 <body>
@@ -214,14 +293,32 @@
       <span id="authState" class="chip">未ログイン</span>
     </div>
     <div class="row" style="gap:8px">
-      <button id="btnOpenSettings" class="btn ghost">設定</button>
-      <button id="btnLogin" class="btn primary">ログイン</button>
-      <button id="btnLogout" class="btn hidden">ログアウト</button>
+      <button id="btnToggleDebug" class="btn ghost" aria-label="デバッグ表示">Debug</button>
+      <button id="btnOpenSettings" class="btn ghost" aria-label="設定を開く">設定</button>
+      <button id="btnLogin" class="btn primary" aria-label="ログイン">ログイン</button>
+      <button id="btnLogout" class="btn hidden" aria-label="ログアウト">ログアウト</button>
     </div>
   </header>
 
   <main class="wrap stack">
-    <!-- アップロード / 一覧 -->
+    <!-- 認証モーダル -->
+    <section id="authModal" class="card hidden" style="padding:16px;max-width:460px;margin:0 auto">
+      <h3 style="margin:0 0 6px">ログイン / 新規登録</h3>
+      <p class="muted" style="margin:0 0 12px">メールとパスワードでログインできます。初めてならそのまま登録してください。</p>
+      <form id="authForm" class="stack">
+        <input id="email" type="email" aria-label="メールアドレス" placeholder="メールアドレス（例: you@example.com）" required />
+        <input id="password" type="password" aria-label="パスワード" placeholder="パスワード（6文字以上）" minlength="6" required />
+        <div class="row" style="justify-content:space-between">
+          <button type="submit" class="btn primary" id="btnEmailLogin" aria-label="メールでログイン">メールでログイン</button>
+          <button type="button" class="btn" id="btnRegister" aria-label="新規登録">新規登録</button>
+        </div>
+        <div class="row" style="gap:8px;align-items:center;justify-content:center"><span class="muted">または</span></div>
+        <button type="button" class="btn" id="btnGoogle" aria-label="Googleでログイン">Googleで続行</button>
+      </form>
+      <p id="authError" class="danger" style="min-height:1.2em"></p>
+    </section>
+
+    <!-- メインアプリセクション -->
     <section id="appSection" class="stack hidden">
       <div class="toolbar">
         <button id="btnSelectFiles" class="btn primary">+ 画像を追加</button>
@@ -230,16 +327,10 @@
         <span id="uploadHint" class="muted">写真を選ぶと自動でアップロードされます (最大10枚)</span>
         <input id="fileInput" type="file" accept="image/*" multiple hidden>
       </div>
-      
-      <!-- 進行状況 -->
+
       <div id="progressBox" class="progress hidden"><div id="progressBar"></div></div>
+      <div id="folderNav" class="folder-nav"></div>
 
-      <!-- フォルダナビゲーション -->
-      <div id="folderNav" class="folder-nav">
-        <button class="folder-btn active" data-folder="">すべて</button>
-      </div>
-
-      <!-- 検索・ソート -->
       <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="row" style="gap:10px">
           <span class="muted">合計:</span>
@@ -262,824 +353,134 @@
       <div id="emptyState" class="center muted" style="padding:40px">まだ写真がありません。上の「+ 画像を追加」からアップロードしてね。</div>
     </section>
 
-    <!-- 設定 -->
-    <section id="settingsSection" class="card hidden" style="padding:16px">
-      <h3 style="margin:0 0 10px">設定</h3>
-      <div class="stack">
-        <label class="row" style="justify-content:space-between"><span>テーマ</span>
-          <select id="themeSelect" style="width:180px">
-            <option value="dark">ダーク</option>
-            <option value="light">ライト</option>
-          </select>
-        </label>
-        <div class="row" style="gap:8px;justify-content:flex-end">
-          <button id="btnCloseSettings" class="btn ghost">閉じる</button>
-          <button id="btnSaveSettings" class="btn primary">保存</button>
+    <!-- 画像編集モーダル -->
+    <div id="editModal" class="form-modal hidden">
+      <div class="form-modal-content">
+        <h3 style="margin:0 0 16px">画像編集</h3>
+        <div class="stack">
+          <input id="editName" placeholder="ファイル名" />
+          <select id="editFolder"><option value="">フォルダを選択</option></select>
+          <input id="editTags" placeholder="タグ（カンマ区切り）例: 風景,旅行,夏" />
+
+          <div class="canvas-container">
+            <canvas id="editCanvas" style="max-width:100%;border:1px solid #2a3040;border-radius:8px"></canvas>
+          </div>
+
+          <div class="edit-controls">
+            <button id="btnRotate" class="btn">回転</button>
+            <button id="btnFlipH" class="btn">左右反転</button>
+            <button id="btnFlipV" class="btn">上下反転</button>
+            <button id="btnReset" class="btn ghost">リセット</button>
+          </div>
+
+          <div class="row">
+            <label style="flex:1">明度: <input id="brightness" type="range" min="0" max="200" value="100"></label>
+            <label style="flex:1">コントラスト: <input id="contrast" type="range" min="0" max="200" value="100"></label>
+          </div>
+
+          <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
+            <button id="btnPreviewSave" class="btn">プレビュー保存</button>
+            <button id="btnCancelEdit" class="btn ghost">キャンセル</button>
+            <button id="btnSaveEdit" class="btn success">保存</button>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- 認証モーダル -->
-    <section id="authModal" class="card hidden" style="padding:16px;max-width:460px;margin:0 auto">
-      <h3 style="margin:0 0 6px">ログイン / 新規登録</h3>
-      <p class="muted" style="margin:0 0 12px">メールとパスワードでログインできます。初めてならそのまま登録してください。</p>
-      <form id="authForm" class="stack">
-        <input id="email" type="email" placeholder="メールアドレス（例: you@example.com）" required />
-        <input id="password" type="password" placeholder="パスワード（6文字以上）" minlength="6" required />
-        <div class="row" style="justify-content:space-between">
-          <button type="submit" class="btn primary" id="btnEmailLogin">メールでログイン</button>
-          <button type="button" class="btn" id="btnRegister">新規登録</button>
-        </div>
-        <div class="row" style="gap:8px;align-items:center;justify-content:center"><span class="muted">または</span></div>
-        <button type="button" class="btn" id="btnGoogle">Googleで続行</button>
-      </form>
-      <p id="authError" class="danger" style="min-height:1.2em"></p>
-    </section>
-
+    </div>
   </main>
-
-  <!-- 一括操作バー -->
-  <div id="bulkActions" class="bulk-actions">
-    <span id="bulkCount">0件選択中</span>
-    <button id="btnBulkDelete" class="btn danger">削除</button>
-    <button id="btnBulkMove" class="btn">移動</button>
-    <button id="btnBulkTag" class="btn">タグ編集</button>
-    <button id="btnClearSelection" class="btn ghost">選択解除</button>
-  </div>
-
-  <!-- フォルダ作成モーダル -->
-  <div id="folderModal" class="form-modal hidden">
-    <div class="form-modal-content">
-      <h3 style="margin:0 0 16px">フォルダ作成</h3>
-      <input id="folderNameInput" placeholder="フォルダ名" />
-      <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
-        <button id="btnCancelFolder" class="btn ghost">キャンセル</button>
-        <button id="btnCreateFolderConfirm" class="btn primary">作成</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 画像編集モーダル -->
-  <div id="editModal" class="form-modal hidden">
-    <div class="form-modal-content">
-      <h3 style="margin:0 0 16px">画像編集</h3>
-      <div class="stack">
-        <input id="editName" placeholder="ファイル名" />
-        <select id="editFolder">
-          <option value="">フォルダを選択</option>
-        </select>
-        <input id="editTags" placeholder="タグ（カンマ区切り）例: 風景,旅行,夏" />
-        
-        <!-- 簡易画像編集 -->
-        <div class="canvas-container">
-          <canvas id="editCanvas" style="max-width:100%;border:1px solid #2a3040;border-radius:8px"></canvas>
-        </div>
-        
-        <div class="edit-controls">
-          <button id="btnRotate" class="btn">回転</button>
-          <button id="btnFlipH" class="btn">左右反転</button>
-          <button id="btnFlipV" class="btn">上下反転</button>
-          <button id="btnReset" class="btn ghost">リセット</button>
-        </div>
-        
-        <div class="row">
-          <label style="flex:1">明度: <input id="brightness" type="range" min="0" max="200" value="100"></label>
-          <label style="flex:1">コントラスト: <input id="contrast" type="range" min="0" max="200" value="100"></label>
-        </div>
-        
-        <div class="row" style="gap:8px;justify-content:flex-end;margin-top:16px">
-          <button id="btnCancelEdit" class="btn ghost">キャンセル</button>
-          <button id="btnSaveEdit" class="btn success">保存</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
-
-  <script>
-    // === Firebase 設定 ===
-    const firebaseConfig = {
-      apiKey: "AIzaSyBCkkQGoq6xm9gIi3SXD5ACWyF09_cXo4A",
-      authDomain: "phote-ec8f0.firebaseapp.com",
-      projectId: "phote-ec8f0",
-      storageBucket: "phote-ec8f0.appspot.com",
-      messagingSenderId: "325922770311",
-      appId: "1:325922770311:web:a39493565961d7ae861722"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-
-    // ========= DOM 参照 =========
-    const authState = document.getElementById('authState');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const appSection = document.getElementById('appSection');
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const btnRegister = document.getElementById('btnRegister');
-    const btnGoogle = document.getElementById('btnGoogle');
-    const authError = document.getElementById('authError');
-
-    const fileInput = document.getElementById('fileInput');
-    const btnSelectFiles = document.getElementById('btnSelectFiles');
-    const btnUpload = document.getElementById('btnUpload'); // 自動アップロードのために参照は残す
-    const progressBox = document.getElementById('progressBox');
-    const progressBar = document.getElementById('progressBar');
-    const photoGrid = document.getElementById('photoGrid');
-    const emptyState = document.getElementById('emptyState');
-    const photoCount = document.getElementById('photoCount');
-
-    const sortSelect = document.getElementById('sortSelect');
-    const searchInput = document.getElementById('searchInput');
-
-    const settingsSection = document.getElementById('settingsSection');
-    const btnOpenSettings = document.getElementById('btnOpenSettings');
-    const btnCloseSettings = document.getElementById('btnCloseSettings');
-    const btnSaveSettings = document.getElementById('btnSaveSettings');
-    const themeSelect = document.getElementById('themeSelect');
-
-    // フォルダ関連
-    const folderNav = document.getElementById('folderNav');
-    const btnCreateFolder = document.getElementById('btnCreateFolder');
-    const folderModal = document.getElementById('folderModal');
-    const folderNameInput = document.getElementById('folderNameInput');
-    const btnCancelFolder = document.getElementById('btnCancelFolder');
-    const btnCreateFolderConfirm = document.getElementById('btnCreateFolderConfirm');
-
-    // 編集関連
-    const editModal = document.getElementById('editModal');
-    const editName = document.getElementById('editName');
-    const editFolder = document.getElementById('editFolder');
-    const editTags = document.getElementById('editTags');
-    const editCanvas = document.getElementById('editCanvas');
-    const btnCancelEdit = document.getElementById('btnCancelEdit');
-    const btnSaveEdit = document.getElementById('btnSaveEdit');
-
-    // 一括操作
-    const bulkActions = document.getElementById('bulkActions');
-    const selectedCount = document.getElementById('selectedCount');
-    const bulkCount = document.getElementById('bulkCount');
-    const btnBulkDownload = document.getElementById('btnBulkDownload');
-    const btnClearSelection = document.getElementById('btnClearSelection');
-
-    // ========= グローバル変数 =========
-    let selectedFiles = [];
-    let currentFolder = '';
-    let folders = [];
-    let selectedPhotos = new Set();
-    let currentEditItem = null;
-    let originalImageData = null;
-    let unsubPhotos = null;
-
-    // ========= ユーティリティ =========
-    const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-    const show = (el)=> el.classList.remove('hidden');
-    const hide = (el)=> el.classList.add('hidden');
-
-    function toast(msg, type = 'info'){
-      console.log(msg);
-      const toast = document.createElement('div');
-      toast.textContent = msg;
-      const colors = {
-        info: '#4ea1ff',
-        success: '#22c55e',
-        error: '#ff647c'
-      };
-      toast.style.cssText = `position:fixed;top:20px;right:20px;background:${colors[type] || colors.info};color:white;padding:8px 16px;border-radius:8px;z-index:10000;`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // ========= 認証処理 =========
-    btnLogin.addEventListener('click', ()=> show(authModal));
-    btnLogout.addEventListener('click', async ()=> {
-      await auth.signOut();
-    });
-
-    btnOpenSettings.addEventListener('click', ()=> show(settingsSection));
-    btnCloseSettings.addEventListener('click', ()=> hide(settingsSection));
-
-    authForm.addEventListener('submit', async (e)=> {
-      e.preventDefault();
-      authError.textContent = '';
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      try{
-        await auth.signInWithEmailAndPassword(email, password);
-        hide(authModal);
-      }catch(err){ authError.textContent = err.message; }
-    });
-
-    btnRegister.addEventListener('click', async ()=> {
-      authError.textContent = '';
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      try{
-        await auth.createUserWithEmailAndPassword(email, password);
-        const uid = auth.currentUser.uid;
-        await db.collection('users').doc(uid).set({
-          settings: { theme:'dark' },
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-        hide(authModal);
-      }catch(err){ authError.textContent = err.message; }
-    });
-
-    btnGoogle.addEventListener('click', async ()=> {
-      authError.textContent = '';
-      try{
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider);
-        hide(authModal);
-      }catch(err){ authError.textContent = err.message; }
-    });
-
-    // ========= 状態監視 =========
-    auth.onAuthStateChanged(async (user)=> {
-      if(user){
-        authState.textContent = `ログイン中: ${user.email || user.displayName || user.uid}`;
-        hide(btnLogin); show(btnLogout); show(appSection);
-
-        // 設定読込
-        try {
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          const settings = userDoc.exists && userDoc.data().settings ? userDoc.data().settings : { theme:'dark' };
-          applyTheme(settings.theme || 'dark');
-          themeSelect.value = settings.theme || 'dark';
-        } catch(e) {
-          console.log('設定読み込みエラー:', e);
-        }
-
-        // フォルダ一覧とフォト購読
-        await loadFolders();
-        subscribePhotos();
-      } else {
-        authState.textContent = '未ログイン';
-        show(btnLogin); hide(btnLogout); hide(appSection); hide(settingsSection);
-        photoGrid.innerHTML = ''; photoCount.textContent = '0'; show(emptyState);
-        if(unsubPhotos){ unsubPhotos(); unsubPhotos = null; }
-      }
-    });
-
-    // ========= 設定保存 =========
-    btnSaveSettings.addEventListener('click', async ()=> {
-      const user = auth.currentUser; if(!user) return;
-      try {
-        const next = { theme: themeSelect.value };
-        await db.collection('users').doc(user.uid).set({ settings: next }, { merge:true });
-        applyTheme(next.theme);
-        toast('設定を保存しました', 'success');
-        hide(settingsSection);
-      } catch(e) {
-        toast('設定保存に失敗しました', 'error');
-      }
-    });
-
-    function applyTheme(mode){
-      if(mode==='light'){
-        document.documentElement.style.setProperty('--bg','#f6f7fb');
-        document.documentElement.style.setProperty('--card','#ffffff');
-        document.documentElement.style.setProperty('--text','#0d1117');
-        document.documentElement.style.setProperty('--muted','#516079');
-        document.documentElement.style.setProperty('--acc','#2563eb');
-      } else {
-        document.documentElement.style.setProperty('--bg','#0f1115');
-        document.documentElement.style.setProperty('--card','#151821');
-        document.documentElement.style.setProperty('--text','#e9edf1');
-        document.documentElement.style.setProperty('--muted','#aab2c0');
-        document.documentElement.style.setProperty('--acc','#4ea1ff');
-      }
-    }
-
-    // ========= ファイル選択・アップロード =========
-    btnSelectFiles.addEventListener('click', ()=> {
-      fileInput.click();
-    });
-    
-    fileInput.addEventListener('change', ()=> {
-      selectedFiles = Array.from(fileInput.files || []).slice(0,10);
-      if (selectedFiles.length > 0) {
-        document.getElementById('uploadHint').textContent = `${selectedFiles.length} 件アップロード中...`;
-        btnUpload.click();
-      }
-    });
-
-    btnUpload.addEventListener('click', async ()=> {
-      const user = auth.currentUser; 
-      if(!user || selectedFiles.length===0) return;
-      
-      try {
-        show(progressBox); 
-        progressBar.style.width = '0%';
-        // btnUpload.disabled = true; // 自動アップロードのため不要
-
-        let completed = 0;
-        for(const file of selectedFiles){
-          const ext = file.name.split('.').pop();
-          const path = `users/${user.uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-          const ref = storage.ref(path);
-          const task = ref.put(file, { contentType: file.type });
-          
-          await new Promise((resolve, reject)=> {
-            task.on('state_changed', (snap)=> {
-              const p = ((completed + snap.bytesTransferred / snap.totalBytes) / selectedFiles.length) * 100;
-              progressBar.style.width = `${Math.min(100, p)}%`;
-            }, reject, async ()=> {
-              try{
-                const url = await ref.getDownloadURL();
-                await db.collection('users').doc(user.uid)
-                  .collection('photos').add({
-                    name: file.name,
-                    url,
-                    storagePath: path,
-                    size: file.size,
-                    type: file.type,
-                    folder: currentFolder,
-                    tags: [],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                  });
-                completed++;
-                progressBar.style.width = `${Math.min(100, (completed/selectedFiles.length)*100)}%`;
-                resolve();
-              }catch(err){ reject(err); }
-            });
-          });
-        }
-
-        await sleep(250);
-        toast(`${selectedFiles.length} 件のアップロードが完了しました！`, 'success');
-        document.getElementById('uploadHint').textContent = '写真を選ぶと自動でアップロードされます (最大10枚)';
-        
-      } catch(error) {
-        console.error('アップロードエラー:', error);
-        toast('アップロードに失敗しました: ' + error.message, 'error');
-      } finally {
-        hide(progressBox); 
-        progressBar.style.width = '0%';
-        // btnUpload.disabled = false; // 自動アップロードのため不要
-        selectedFiles = []; 
-        fileInput.value = '';
-        document.getElementById('uploadHint').textContent = '最大10枚まで同時にアップロードできます';
-      }
-    });
-
-    // ========= フォルダ管理 =========
-    btnCreateFolder.addEventListener('click', ()=> show(folderModal));
-    btnCancelFolder.addEventListener('click', ()=> hide(folderModal));
-
-    btnCreateFolderConfirm.addEventListener('click', async ()=> {
-      const user = auth.currentUser;
-      const name = folderNameInput.value.trim();
-      if(!user || !name) return;
-
-      try {
-        await db.collection('users').doc(user.uid).collection('folders').add({
-          name,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        folderNameInput.value = '';
-        hide(folderModal);
-        toast('フォルダを作成しました', 'success');
-        await loadFolders();
-      } catch(e) {
-        toast('フォルダ作成に失敗しました', 'error');
-      }
-    });
-
-    async function loadFolders() {
-      const user = auth.currentUser;
-      if(!user) return;
-      
-      try {
-        const snap = await db.collection('users').doc(user.uid).collection('folders').orderBy('name').get();
-        folders = [];
-        snap.forEach(doc => folders.push({ id: doc.id, ...doc.data() }));
-        renderFolderNav();
-        updateEditFolderOptions();
-      } catch(e) {
-        console.log('フォルダ読み込みエラー:', e);
-      }
-    }
-
-    function renderFolderNav() {
-      folderNav.innerHTML = '<button class="folder-btn active" data-folder="">すべて</button>';
-      folders.forEach(folder => {
-        const btn = document.createElement('button');
-        btn.className = 'folder-btn';
-        btn.dataset.folder = folder.id;
-        btn.textContent = folder.name;
-        btn.onclick = () => selectFolder(folder.id);
-        folderNav.appendChild(btn);
-      });
-    }
-
-    function selectFolder(folderId) {
-      currentFolder = folderId;
-      document.querySelectorAll('.folder-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.folder === folderId);
-      });
-      subscribePhotos();
-    }
-
-    function updateEditFolderOptions() {
-      editFolder.innerHTML = '<option value="">フォルダを選択</option>';
-      folders.forEach(folder => {
-        const option = document.createElement('option');
-        option.value = folder.id;
-        option.textContent = folder.name;
-        editFolder.appendChild(option);
-      });
-    }
-
-    // フォルダナビクリックイベント
-    folderNav.addEventListener('click', (e) => {
-      if(e.target.classList.contains('folder-btn')) {
-        selectFolder(e.target.dataset.folder);
-      }
-    });
-
-    // ========= 写真一覧購読 =========
-    function subscribePhotos(){
-      const user = auth.currentUser; if(!user) return;
-      if(unsubPhotos){ unsubPhotos(); unsubPhotos = null; }
-
-      let q = db.collection('users').doc(user.uid).collection('photos');
-      
-      // フォルダフィルター
-      if(currentFolder) {
-        q = q.where('folder', '==', currentFolder);
-      }
-      
-      // ソート
-      const sortKey = sortSelect.value;
-      if(sortKey === 'createdAt_asc') q = q.orderBy('createdAt','asc');
-      else if(sortKey === 'name_asc') q = q.orderBy('name','asc');
-      else if(sortKey === 'name_desc') q = q.orderBy('name','desc');
-      else q = q.orderBy('createdAt','desc');
-
-      unsubPhotos = q.onSnapshot((snap)=> {
-        const items = [];
-        snap.forEach(doc=> items.push({ id: doc.id, ...doc.data() }));
-        renderPhotos(items);
-      });
-    }
-
-    sortSelect.addEventListener('change', ()=> subscribePhotos());
-    searchInput.addEventListener('input', ()=> subscribePhotos());
-
-    function renderPhotos(items){
-      const q = (searchInput.value || '').toLowerCase().trim();
-      const filtered = q ? items.filter(it=> {
-        const name = (it.name||'').toLowerCase();
-        const tags = (it.tags||[]).join(' ').toLowerCase();
-        return name.includes(q) || tags.includes(q);
-      }) : items;
-
-      photoCount.textContent = String(filtered.length);
-      if(filtered.length === 0){
-        photoGrid.innerHTML = '';
-        show(emptyState);
-        return;
-      }
-      hide(emptyState);
-
-      photoGrid.innerHTML = '';
-      filtered.forEach(item=>{
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.title = item.name;
-        
-        // 選択チェックボックス
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'select-checkbox';
-        checkbox.onchange = () => toggleSelection(item.id, checkbox.checked);
-        
-        // 画像
-        const img = document.createElement('img');
-        img.src = item.url;
-        img.alt = item.name || 'photo';
-        img.onclick = () => showImageModal(item.url, item.name, item.size, item.tags);
-        
-        // 編集ボタン
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit-btn';
-        editBtn.innerHTML = '✎';
-        editBtn.onclick = (e) => {
-          e.stopPropagation();
-          editPhoto(item);
-        };
-        
-        // 削除ボタン
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-btn';
-        delBtn.innerHTML = '×';
-        delBtn.onclick = (e) => {
-          e.stopPropagation();
-          deletePhoto(item);
-        };
-        
-        // 画像情報
-        const info = document.createElement('div');
-        info.className = 'card-info';
-        
-        const folderName = folders.find(f => f.id === item.folder)?.name || '';
-        const tagsHtml = (item.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
-        
-        info.innerHTML = `
-          <div class="card-name">${item.name}</div>
-          <div>${(item.size/1024/1024).toFixed(1)}MB</div>
-          ${folderName ? `<div class="card-folder">📁 ${folderName}</div>` : ''}
-          <div class="card-tags">${tagsHtml}</div>
-        `;
-        
-        div.appendChild(checkbox);
-        div.appendChild(img);
-        div.appendChild(editBtn);
-        div.appendChild(delBtn);
-        div.appendChild(info);
-        photoGrid.appendChild(div);
-      });
-    }
-
-    // ========= 画像表示モーダル =========
-    function showImageModal(url, name, size, tags) {
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = name;
-      
-      const info = document.createElement('div');
-      info.className = 'modal-info';
-      const tagsText = tags && tags.length ? ` | タグ: ${tags.join(', ')}` : '';
-      info.textContent = `${name} (${(size/1024/1024).toFixed(1)}MB)${tagsText}`;
-      
-      modal.appendChild(img);
-      modal.appendChild(info);
-      
-      modal.onclick = () => modal.remove();
-      document.body.appendChild(modal);
-    }
-
-    // ========= 選択管理 =========
-    function toggleSelection(photoId, selected) {
-      if(selected) {
-        selectedPhotos.add(photoId);
-      } else {
-        selectedPhotos.delete(photoId);
-      }
-      updateSelectionUI();
-    }
-
-    function updateSelectionUI() {
-      const count = selectedPhotos.size;
-      if(count > 0) {
-        bulkActions.classList.add('show');
-        bulkCount.textContent = `${count}件選択中`;
-        selectedCount.textContent = `(${count}件選択)`;
-        show(selectedCount);
-      } else {
-        bulkActions.classList.remove('show');
-        hide(selectedCount);
-      }
-    }
-
-    btnClearSelection.addEventListener('click', () => {
-      selectedPhotos.clear();
-      document.querySelectorAll('.select-checkbox').forEach(cb => cb.checked = false);
-      updateSelectionUI();
-    });
-
-    // ========= 削除機能 =========
-    async function deletePhoto(item) {
-      if (!confirm(`「${item.name}」を削除しますか？`)) return;
-      
-      try {
-        await storage.ref(item.storagePath).delete();
-        await db.collection('users').doc(auth.currentUser.uid)
-          .collection('photos').doc(item.id).delete();
-        toast('削除しました', 'success');
-      } catch(error) {
-        console.error('削除エラー:', error);
-        toast('削除に失敗しました', 'error');
-      }
-    }
-
-    // ========= 画像編集 =========
-    let editCtx, originalImage;
-
-    function editPhoto(item) {
-      currentEditItem = item;
-      editName.value = item.name || '';
-      editFolder.value = item.folder || '';
-      editTags.value = (item.tags || []).join(', ');
-      
-      // キャンバスに画像読み込み
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        editCanvas.width = Math.min(400, img.width);
-        editCanvas.height = (img.height * editCanvas.width) / img.width;
-        editCtx = editCanvas.getContext('2d');
-        originalImage = img;
-        drawEditImage();
-      };
-      img.src = item.url;
-      
-      show(editModal);
-    }
-
-    let rotation = 0, flipH = 1, flipV = 1, brightness = 100, contrast = 100;
-
-    function drawEditImage() {
-      if(!editCtx || !originalImage) return;
-      
-      editCtx.clearRect(0, 0, editCanvas.width, editCanvas.height);
-      editCtx.save();
-      
-      // 変形の中心点
-      editCtx.translate(editCanvas.width/2, editCanvas.height/2);
-      editCtx.rotate(rotation * Math.PI / 180);
-      editCtx.scale(flipH, flipV);
-      
-      // フィルター適用
-      editCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
-      
-      editCtx.drawImage(originalImage, -editCanvas.width/2, -editCanvas.height/2, editCanvas.width, editCanvas.height);
-      editCtx.restore();
-    }
-
-    // 編集コントロール
-    document.getElementById('btnRotate').onclick = () => { rotation += 90; drawEditImage(); };
-    document.getElementById('btnFlipH').onclick = () => { flipH *= -1; drawEditImage(); };
-    document.getElementById('btnFlipV').onclick = () => { flipV *= -1; drawEditImage(); };
-    document.getElementById('btnReset').onclick = () => { 
-      rotation = 0; flipH = 1; flipV = 1; brightness = 100; contrast = 100;
-      document.getElementById('brightness').value = 100;
-      document.getElementById('contrast').value = 100;
-      drawEditImage(); 
-    };
-
-    document.getElementById('brightness').oninput = (e) => { brightness = e.target.value; drawEditImage(); };
-    document.getElementById('contrast').oninput = (e) => { contrast = e.target.value; drawEditImage(); };
-
-    btnCancelEdit.addEventListener('click', () => hide(editModal));
-
-    btnSaveEdit.addEventListener('click', async () => {
-      if(!currentEditItem) return;
-      
-      try {
-        const user = auth.currentUser;
-        const updates = {
-          name: editName.value || currentEditItem.name,
-          folder: editFolder.value || '',
-          tags: editTags.value.split(',').map(t => t.trim()).filter(t => t)
-        };
-        
-        // 画像が編集されている場合は新しい画像をアップロード
-        if(rotation !== 0 || flipH !== 1 || flipV !== 1 || brightness !== 100 || contrast !== 100) {
-          const canvas = editCanvas;
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-          const path = `users/${user.uid}/edited-${Date.now()}.jpg`;
-          const ref = storage.ref(path);
-          await ref.put(blob);
-          const newUrl = await ref.getDownloadURL();
-          
-          // 古い画像を削除
-          try { await storage.ref(currentEditItem.storagePath).delete(); } catch(e) {}
-          
-          updates.url = newUrl;
-          updates.storagePath = path;
-        }
-        
-        await db.collection('users').doc(user.uid)
-          .collection('photos').doc(currentEditItem.id).update(updates);
-        
-        hide(editModal);
-        toast('保存しました', 'success');
-      } catch(e) {
-        toast('保存に失敗しました', 'error');
-      }
-    });
-
-    // ========= 一括ダウンロード =========
-    btnBulkDownload.addEventListener('click', async () => {
-      if(selectedPhotos.size === 0) {
-        toast('ダウンロードする画像を選択してください');
-        return;
-      }
-      
-      toast('ダウンロード準備中...', 'info');
-      
-      try {
-        for(const photoId of selectedPhotos) {
-          // 簡易ダウンロード（実際のZIP化は複雑なので個別ダウンロード）
-          const photoDoc = await db.collection('users').doc(auth.currentUser.uid)
-            .collection('photos').doc(photoId).get();
-          
-          if(photoDoc.exists) {
-            const data = photoDoc.data();
-            const a = document.createElement('a');
-            a.href = data.url;
-            a.download = data.name;
-            a.click();
-            await sleep(500); // ダウンロード間隔
-          }
-        }
-        toast('ダウンロード開始', 'success');
-      } catch(e) {
-        toast('ダウンロードに失敗しました', 'error');
-      }
-    });
-
-    // ========= 一括操作 =========
-    document.getElementById('btnBulkDelete').addEventListener('click', async () => {
-      if(!confirm(`選択した${selectedPhotos.size}件の画像を削除しますか？`)) return;
-      
-      try {
-        for(const photoId of selectedPhotos) {
-          const photoDoc = await db.collection('users').doc(auth.currentUser.uid)
-            .collection('photos').doc(photoId).get();
-          
-          if(photoDoc.exists) {
-            const data = photoDoc.data();
-            await storage.ref(data.storagePath).delete();
-            await photoDoc.ref.delete();
-          }
-        }
-        selectedPhotos.clear();
-        updateSelectionUI();
-        toast('一括削除完了', 'success');
-      } catch(e) {
-        toast('削除に失敗しました', 'error');
-      }
-    });
-
-    document.getElementById('btnBulkMove').addEventListener('click', async () => {
-      const targetFolder = prompt('移動先フォルダを選択してください\n\n' + 
-        folders.map(f => f.name).join('\n') + 
-        '\n\n(フォルダ名を入力、空白でルートフォルダ)');
-      
-      if(targetFolder === null) return;
-      
-      const folder = folders.find(f => f.name === targetFolder);
-      const folderId = folder ? folder.id : '';
-      
-      try {
-        for(const photoId of selectedPhotos) {
-          await db.collection('users').doc(auth.currentUser.uid)
-            .collection('photos').doc(photoId).update({ folder: folderId });
-        }
-        selectedPhotos.clear();
-        updateSelectionUI();
-        toast('移動完了', 'success');
-      } catch(e) {
-        toast('移動に失敗しました', 'error');
-      }
-    });
-
-    document.getElementById('btnBulkTag').addEventListener('click', async () => {
-      const newTags = prompt('追加するタグをカンマ区切りで入力してください\n例: 旅行,夏,風景');
-      if(!newTags) return;
-      
-      const tags = newTags.split(',').map(t => t.trim()).filter(t => t);
-      
-      try {
-        for(const photoId of selectedPhotos) {
-          const photoDoc = await db.collection('users').doc(auth.currentUser.uid)
-            .collection('photos').doc(photoId).get();
-          
-          if(photoDoc.exists) {
-            const currentTags = photoDoc.data().tags || [];
-            const updatedTags = [...new Set([...currentTags, ...tags])];
-            await photoDoc.ref.update({ tags: updatedTags });
-          }
-        }
-        selectedPhotos.clear();
-        updateSelectionUI();
-        toast('タグ追加完了', 'success');
-      } catch(e) {
-        toast('タグ追加に失敗しました', 'error');
-      }
-    });
-
-    // モーダル外クリックで閉じる
-    folderModal.addEventListener('click', (e) => {
-      if(e.target === folderModal) hide(folderModal);
-    });
-    editModal.addEventListener('click', (e) => {
-      if(e.target === editModal) hide(editModal);
-    });
-  </script>
 </body>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBCkkQGoq6xm9gIi3SXD5ACWyF09_cXo4A",
+  authDomain: "phote-ec8f0.firebaseapp.com",
+  projectId: "phote-ec8f0",
+  storageBucket: "phote-ec8f0.appspot.com",
+  messagingSenderId: "325922770311",
+  appId: "1:325922770311:web:a39493565961d7ae861722"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+function applyTheme(mode){
+  if(mode === 'light'){
+    document.documentElement.style.setProperty('--bg','#f6f7fb');
+    document.documentElement.style.setProperty('--card','#ffffff');
+    document.documentElement.style.setProperty('--text','#0d1117');
+    document.documentElement.style.setProperty('--muted','#516079');
+    document.documentElement.style.setProperty('--acc','#2563eb');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0f1115');
+    document.documentElement.style.setProperty('--card','#151821');
+    document.documentElement.style.setProperty('--text','#e9edf1');
+    document.documentElement.style.setProperty('--muted','#aab2c0');
+    document.documentElement.style.setProperty('--acc','#4ea1ff');
+  }
+}
+
+// フォルダナビゲーション（ドラッグ対応）
+function renderFolderNav() {
+  folderNav.innerHTML = '<button class="folder-btn active" data-folder="" ondragover="event.preventDefault()" ondrop="handleDrop(event, '')">すべて</button>';
+  folders.forEach(folder => {
+    const btn = document.createElement('button');
+    btn.className = 'folder-btn';
+    btn.dataset.folder = folder.id;
+    btn.textContent = folder.name;
+    btn.ondragover = (e) => e.preventDefault();
+    btn.ondrop = (e) => handleDrop(e, folder.id);
+    folderNav.appendChild(btn);
+  });
+}
+
+function handleDrop(event, targetFolderId) {
+  const photoId = event.dataTransfer.getData('text/plain');
+  db.collection('users').doc(auth.currentUser.uid)
+    .collection('photos').doc(photoId).update({ folder: targetFolderId })
+    .then(() => toast('フォルダに移動しました', 'success'))
+    .catch(e => toast(`移動失敗: ${e.message}`, 'error'));
+}
+
+// 編集画像のプレビュー保存
+document.getElementById('btnPreviewSave').addEventListener('click', () => {
+  editCanvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'preview.jpg';
+    a.click();
+    toast('プレビュー画像を保存しました', 'success');
+  }, 'image/jpeg', 0.9);
+});
+
+// エラーハンドリング強化（例：登録）
+btnRegister.addEventListener('click', async ()=> {
+  authError.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  try{
+    await auth.createUserWithEmailAndPassword(email, password);
+    const uid = auth.currentUser.uid;
+    await db.collection('users').doc(uid).set({
+      settings: { theme:'dark' },
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+    hide(authModal);
+  }catch(err){ 
+    authError.textContent = '登録に失敗しました: ' + err.message;
+    toast('登録に失敗しました: ' + err.message, 'error');
+  }
+});
+
+// img 要素に追加（ドラッグ対応）
+// このコードは renderPhotos 関数内で各画像に対して追加してください
+img.draggable = true;
+img.ondragstart = (e) => {
+  e.dataTransfer.setData('text/plain', item.id);
+};
+</script>
 </html>
