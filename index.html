@@ -564,28 +564,20 @@
       fileInput.click();
     });
     
-    fileInput.addEventListener('change', async ()=> {
+    fileInput.addEventListener('change', ()=> {
       selectedFiles = Array.from(fileInput.files || []).slice(0,10);
       if (selectedFiles.length > 0) {
         document.getElementById('uploadHint').textContent = `${selectedFiles.length} 件アップロード中...`;
-        // Ensure we're logged in before uploading
-        if(!auth.currentUser) {
-          toast('アップロード前にログインしてください', 'error');
-          return;
-        }
-        await handleUpload();
+        btnUpload.click();
       }
     });
 
-    async function handleUpload() {
+    btnUpload.addEventListener('click', async ()=> {
       const user = auth.currentUser; 
       if(!user || selectedFiles.length===0) return;
       
       try {
-        show(progressBox);
-        // Clear previous upload state
-        photoGrid.innerHTML = '';
-        show(emptyState); 
+        show(progressBox); 
         progressBar.style.width = '0%';
         // btnUpload.disabled = true; // 自動アップロードのため不要
 
@@ -603,7 +595,7 @@
             }, reject, async ()=> {
               try{
                 const url = await ref.getDownloadURL();
-                const docRef = await db.collection('users').doc(user.uid)
+                await db.collection('users').doc(user.uid)
                   .collection('photos').add({
                     name: file.name,
                     url,
@@ -612,8 +604,7 @@
                     type: file.type,
                     folder: currentFolder,
                     tags: [],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                   });
                 completed++;
                 progressBar.style.width = `${Math.min(100, (completed/selectedFiles.length)*100)}%`;
@@ -623,14 +614,9 @@
           });
         }
 
-        // Force reload of photos
-        subscribePhotos();
-        
         await sleep(250);
         toast(`${selectedFiles.length} 件のアップロードが完了しました！`, 'success');
         document.getElementById('uploadHint').textContent = '写真を選ぶと自動でアップロードされます (最大10枚)';
-        // Clear file input
-        fileInput.value = '';
         
       } catch(error) {
         console.error('アップロードエラー:', error);
