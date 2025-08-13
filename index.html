@@ -426,7 +426,7 @@ function applyTheme(mode){
 
 // フォルダナビゲーション（ドラッグ対応）
 function renderFolderNav() {
-  folderNav.innerHTML = '<button class="folder-btn active" data-folder="" ondragover="event.preventDefault()" ondrop="handleDrop(event, '')">すべて</button>';
+  folderNav.innerHTML = "<button class='folder-btn active' data-folder='' ondragover='event.preventDefault()' ondrop='handleDrop(event, \"\")'>すべて</button>";
   folders.forEach(folder => {
     const btn = document.createElement('button');
     btn.className = 'folder-btn';
