@@ -11,6 +11,7 @@
     header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;background:#0c0e12;border-bottom:1px solid #1e2230;position:sticky;top:0;z-index:100}
     .btn{appearance:none;border:1px solid #2a3040;background:#1a1f2b;color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
     .btn:hover{border-color:#3b4256}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
     .btn.primary{background:var(--acc);color:black;border-color:transparent}
     .btn.ghost{background:transparent}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:8px 0}
@@ -28,6 +29,8 @@
     .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
     .chip{font-size:12px;padding:4px 8px;border:1px solid #2a3040;border-radius:999px;color:var(--muted)}
     .danger{color:#ff647c}
+    .success{color:#4ade80}
+    .warning{color:#fbbf24}
     .progress{height:8px;background:#12151d;border:1px solid #23293a;border-radius:999px;overflow:hidden;margin-bottom:16px}
     .progress > div{height:100%;width:0;background:var(--acc);transition:width .2s linear}
     .center{display:flex;align-items:center;justify-content:center}
@@ -55,7 +58,7 @@
     .card:hover .delete-btn{opacity:1}
     .delete-btn:hover{background:rgba(255,100,124,1);transform:scale(1.1)}
     
-    /* フルスクリーンモーダル (Googleフォト風) */
+    /* フルスクリーンモーダル */
     .modal{
       position:fixed;
       top:0;left:0;
@@ -220,6 +223,29 @@
       word-break:break-word;
     }
 
+    /* ステータスアラート */
+    .status-alert {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .status-alert.error {
+      background: rgba(255, 100, 124, 0.1);
+      border: 1px solid rgba(255, 100, 124, 0.3);
+      color: #ff647c;
+    }
+    .status-alert.warning {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: #fbbf24;
+    }
+    .status-alert.success {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: #4ade80;
+    }
+
     /* レスポンシブ */
     @media (max-width: 768px) {
       .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
@@ -249,6 +275,12 @@
   <main class="wrap stack">
     <!-- アップロード / 一覧 -->
     <section id="appSection" class="stack hidden">
+      <!-- ステータス表示 -->
+      <div id="statusAlert" class="status-alert warning hidden">
+        <strong>⚠️ 設定が必要です</strong><br>
+        Cloudinaryの設定を完了してからアップロードを開始してください。
+      </div>
+
       <div class="toolbar">
         <label class="btn primary">📁 画像を選択<input id="fileInput" type="file" accept="image/*" multiple hidden></label>
         <button id="btnUpload" class="btn" disabled>⬆️ アップロード</button>
@@ -297,10 +329,17 @@
           <div class="stack">
             <input id="cloudinaryCloudName" placeholder="Cloud Name (例: your-cloud-name)" />
             <input id="cloudinaryUploadPreset" placeholder="Upload Preset (例: unsigned_uploads)" />
-            <p class="muted" style="margin:0;font-size:12px">
-              Cloudinaryの無料アカウントを作成して、Cloud NameとUpload Presetを入力してください。<br>
-              <a href="https://cloudinary.com" target="_blank" style="color:var(--acc)">cloudinary.com</a> で登録
-            </p>
+            <div id="cloudinaryStatus" class="status-alert error">
+              <strong>❌ 未設定</strong><br>
+              Cloudinaryの設定が必要です。以下の手順で設定してください：
+              <ol style="margin: 8px 0 0 16px; font-size: 12px;">
+                <li><a href="https://cloudinary.com" target="_blank" style="color:var(--acc)">cloudinary.com</a> で無料アカウントを作成</li>
+                <li>ダッシュボードから「Cloud Name」をコピー</li>
+                <li>Settings → Upload → Upload presets で「unsigned」プリセットを作成</li>
+                <li>上記の情報を入力して保存</li>
+              </ol>
+            </div>
+            <button id="btnTestCloudinary" class="btn ghost" disabled>🧪 接続テスト</button>
           </div>
         </div>
 
@@ -417,6 +456,9 @@
     const themeSelect = document.getElementById('themeSelect');
     const cloudinaryCloudName = document.getElementById('cloudinaryCloudName');
     const cloudinaryUploadPreset = document.getElementById('cloudinaryUploadPreset');
+    const cloudinaryStatus = document.getElementById('cloudinaryStatus');
+    const btnTestCloudinary = document.getElementById('btnTestCloudinary');
+    const statusAlert = document.getElementById('statusAlert');
 
     // ========= ユーティリティ =========
     const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
@@ -428,8 +470,8 @@
       console.log(msg);
       const toast = document.createElement('div');
       toast.textContent = msg;
-      const bgColor = type === 'error' ? '#ff647c' : '#4ea1ff';
-      toast.style.cssText = `position:fixed;top:20px;right:20px;background:${bgColor};color:white;padding:12px 16px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:slideIn 0.3s ease-out;`;
+      const bgColor = type === 'error' ? '#ff647c' : type === 'success' ? '#4ade80' : '#4ea1ff';
+      toast.style.cssText = `position:fixed;top:20px;right:20px;background:${bgColor};color:white;padding:12px 16px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:slideIn 0.3s ease-out;max-width:300px;`;
       document.body.appendChild(toast);
       setTimeout(() => {
         if (document.body.contains(toast)) {
@@ -440,7 +482,7 @@
             }
           }, 300);
         }
-      }, 3000);
+      }, type === 'error' ? 5000 : 3000);
     }
 
     // CSS for toast animations
@@ -457,41 +499,172 @@
     `;
     document.head.appendChild(style);
 
-    // ========= Cloudinary アップロード関数 =========
+    // ========= Cloudinary 関数 =========
+    function validateCloudinaryConfig() {
+      const isValid = cloudinaryConfig.cloudName && cloudinaryConfig.uploadPreset;
+      
+      if (isValid) {
+        cloudinaryStatus.className = 'status-alert success';
+        cloudinaryStatus.innerHTML = '<strong>✅ 設定完了</strong><br>Cloudinaryの設定が正常に完了しています。';
+        btnTestCloudinary.disabled = false;
+        hide(statusAlert);
+      } else {
+        cloudinaryStatus.className = 'status-alert error';
+        cloudinaryStatus.innerHTML = `
+          <strong>❌ 未設定</strong><br>
+          Cloudinaryの設定が必要です。以下の手順で設定してください：
+          <ol style="margin: 8px 0 0 16px; font-size: 12px;">
+            <li><a href="https://cloudinary.com" target="_blank" style="color:var(--acc)">cloudinary.com</a> で無料アカウントを作成</li>
+            <li>ダッシュボードから「Cloud Name」をコピー</li>
+            <li>Settings → Upload → Upload presets で「unsigned」プリセットを作成</li>
+            <li>上記の情報を入力して保存</li>
+          </ol>
+        `;
+        btnTestCloudinary.disabled = true;
+        
+        // メイン画面にも警告表示
+        statusAlert.innerHTML = `
+          <strong>⚠️ 設定が必要です</strong><br>
+          Cloudinaryの設定を完了してからアップロードを開始してください。
+        `;
+        show(statusAlert);
+      }
+      
+      return isValid;
+    }
+
+    // Cloudinary接続テスト
+    async function testCloudinaryConnection() {
+      if (!validateCloudinaryConfig()) {
+        toast('Cloudinaryの設定が不完全です', 'error');
+        return false;
+      }
+
+      try {
+        debug('Cloudinary接続テスト開始');
+        btnTestCloudinary.disabled = true;
+        btnTestCloudinary.textContent = '🔄 テスト中...';
+
+        // 小さなテスト画像を作成（1x1ピクセルの透明PNG）
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const testBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+        const formData = new FormData();
+        formData.append('file', testBlob, 'test.png');
+        formData.append('upload_preset', cloudinaryConfig.uploadPreset);
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
+          {
+            method: 'POST',
+            body: formData
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          debug('Cloudinary接続テスト成功');
+          toast('Cloudinaryの接続テストが成功しました！', 'success');
+          
+          // テスト画像を削除（オプション）
+          try {
+            await fetch(
+              `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/destroy`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ public_id: data.public_id, upload_preset: cloudinaryConfig.uploadPreset })
+              }
+            );
+          } catch (deleteError) {
+            // 削除エラーは無視（テスト画像なので）
+            debug('テスト画像削除エラー（無視）: ' + deleteError.message);
+          }
+          
+          return true;
+        } else {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+      } catch (error) {
+        debug(`Cloudinary接続テストエラー: ${error.message}`);
+        toast(`接続テストに失敗しました: ${error.message}`, 'error');
+        return false;
+      } finally {
+        btnTestCloudinary.disabled = false;
+        btnTestCloudinary.textContent = '🧪 接続テスト';
+      }
+    }
+
     async function uploadToCloudinary(file) {
-      if (!cloudinaryConfig.cloudName || !cloudinaryConfig.uploadPreset) {
+      if (!validateCloudinaryConfig()) {
         throw new Error('Cloudinaryの設定が不完全です。設定画面で設定してください。');
+      }
+
+      debug(`Cloudinaryアップロード開始: ${file.name} (${(file.size/1024/1024).toFixed(2)}MB)`);
+
+      // ファイルサイズチェック（10MBまで）
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        throw new Error(`ファイルサイズが大きすぎます。10MB以下にしてください。(現在: ${(file.size/1024/1024).toFixed(1)}MB)`);
+      }
+
+      // ファイル形式チェック
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`サポートされていないファイル形式です: ${file.type}`);
       }
 
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', cloudinaryConfig.uploadPreset);
       formData.append('folder', `user_photos/${auth.currentUser.uid}`); // フォルダ分け
+      formData.append('resource_type', 'auto'); // 自動検出
+      formData.append('quality', 'auto'); // 自動最適化
       
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
-        {
-          method: 'POST',
-          body: formData
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒タイムアウト
+
+      try {
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+          throw new Error(`Cloudinaryアップロードエラー: ${errorMessage}`);
         }
-      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Cloudinaryアップロードエラー: ${response.status} - ${errorText}`);
+        const data = await response.json();
+        debug(`Cloudinaryアップロード完了: ${file.name} -> ${data.public_id}`);
+        
+        return {
+          url: data.secure_url,
+          publicId: data.public_id,
+          width: data.width,
+          height: data.height,
+          format: data.format,
+          bytes: data.bytes,
+          // サムネイル用URL（Cloudinaryの変換機能）
+          thumbnailUrl: data.secure_url.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto/')
+        };
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('アップロードがタイムアウトしました。ネットワーク接続を確認してください。');
+        }
+        throw error;
       }
-
-      const data = await response.json();
-      return {
-        url: data.secure_url,
-        publicId: data.public_id,
-        width: data.width,
-        height: data.height,
-        format: data.format,
-        bytes: data.bytes,
-        // サムネイル用URL（Cloudinaryの変換機能）
-        thumbnailUrl: data.secure_url.replace('/upload/', '/upload/w_300,h_300,c_fill/')
-      };
     }
 
     // ========= フルスクリーンモーダル（Googleフォト風） =========
@@ -629,7 +802,7 @@
         await db.collection('users').doc(auth.currentUser.uid)
           .collection('photos').doc(item.id).delete();
         
-        toast(`「${item.name}」を削除しました`);
+        toast(`「${item.name}」を削除しました`, 'success');
         debug(`削除完了: ${item.name}`);
       } catch(error) {
         console.error('削除エラー:', error);
@@ -653,9 +826,17 @@
     btnOpenSettings.addEventListener('click', ()=> {
       show(settingsSection);
       hide(authModal);
+      validateCloudinaryConfig(); // 設定画面を開いた時に状態をチェック
     });
     
     btnCloseSettings.addEventListener('click', ()=> hide(settingsSection));
+
+    // Cloudinary設定の変更監視
+    cloudinaryCloudName.addEventListener('input', validateCloudinaryConfig);
+    cloudinaryUploadPreset.addEventListener('input', validateCloudinaryConfig);
+    
+    // Cloudinary接続テストボタン
+    btnTestCloudinary.addEventListener('click', testCloudinaryConnection);
 
     authForm.addEventListener('submit', async (e)=> {
       e.preventDefault();
@@ -669,9 +850,9 @@
         await auth.signInWithEmailAndPassword(email, password);
         hide(authModal);
         debug('ログイン成功');
-        toast('ログインしました');
+        toast('ログインしました', 'success');
       }catch(err){ 
-        authError.textContent = err.message; 
+        authError.textContent = getFirebaseErrorMessage(err);
         debug(`ログインエラー: ${err.message}`);
       }
     });
@@ -696,9 +877,9 @@
         }, { merge:true });
         hide(authModal);
         debug('新規登録成功');
-        toast('アカウントを作成しました');
+        toast('アカウントを作成しました', 'success');
       }catch(err){ 
-        authError.textContent = err.message; 
+        authError.textContent = getFirebaseErrorMessage(err);
         debug(`新規登録エラー: ${err.message}`);
       }
     });
@@ -712,12 +893,34 @@
         await auth.signInWithPopup(provider);
         hide(authModal);
         debug('Google認証成功');
-        toast('Googleでログインしました');
+        toast('Googleでログインしました', 'success');
       }catch(err){ 
-        authError.textContent = err.message; 
+        authError.textContent = getFirebaseErrorMessage(err);
         debug(`Google認証エラー: ${err.message}`);
       }
     });
+
+    // Firebase エラーメッセージの日本語化
+    function getFirebaseErrorMessage(error) {
+      switch (error.code) {
+        case 'auth/user-not-found':
+          return 'このメールアドレスは登録されていません。新規登録してください。';
+        case 'auth/wrong-password':
+          return 'パスワードが間違っています。';
+        case 'auth/email-already-in-use':
+          return 'このメールアドレスは既に使用されています。ログインしてください。';
+        case 'auth/weak-password':
+          return 'パスワードは6文字以上である必要があります。';
+        case 'auth/invalid-email':
+          return '有効なメールアドレスを入力してください。';
+        case 'auth/network-request-failed':
+          return 'ネットワークエラーが発生しました。接続を確認してください。';
+        case 'auth/popup-closed-by-user':
+          return 'ログインがキャンセルされました。';
+        default:
+          return error.message;
+      }
+    }
 
     // ========= 状態監視 =========
     let unsubPhotos = null;
@@ -746,6 +949,9 @@
           cloudinaryCloudName.value = cloudinaryConfig.cloudName;
           cloudinaryUploadPreset.value = cloudinaryConfig.uploadPreset;
           
+          // 設定状態をチェック
+          validateCloudinaryConfig();
+          
           debug('設定読み込み完了');
         } catch (error) {
           debug(`設定読み込みエラー: ${error.message}`);
@@ -759,6 +965,7 @@
         show(btnLogin); hide(btnLogout); hide(appSection); hide(settingsSection);
         photoGrid.innerHTML = ''; photoCount.textContent = '0'; show(emptyState);
         allPhotos = []; // キャッシュクリア
+        hide(statusAlert); // 警告非表示
         if(unsubPhotos){ unsubPhotos(); unsubPhotos = null; }
       }
     });
@@ -780,8 +987,11 @@
         cloudinaryConfig.cloudName = next.cloudinaryCloudName;
         cloudinaryConfig.uploadPreset = next.cloudinaryUploadPreset;
         
+        // 設定状態をチェック
+        validateCloudinaryConfig();
+        
         applyTheme(next.theme);
-        toast('設定を保存しました');
+        toast('設定を保存しました', 'success');
         hide(settingsSection);
         debug('設定保存完了');
       } catch (error) {
@@ -810,19 +1020,32 @@
     let selectedFiles = [];
     fileInput.addEventListener('change', ()=> {
       selectedFiles = Array.from(fileInput.files || []).slice(0,10);
-      btnUpload.disabled = selectedFiles.length===0;
-      document.getElementById('uploadHint').textContent = selectedFiles.length ? 
-        `${selectedFiles.length} 件選択中` : 
-        '最大10枚まで同時にアップロードできます';
+      updateUploadButton();
       debug(`ファイル選択: ${selectedFiles.length}件`);
     });
+
+    function updateUploadButton() {
+      const hasFiles = selectedFiles.length > 0;
+      const hasConfig = validateCloudinaryConfig();
+      
+      btnUpload.disabled = !hasFiles || !hasConfig;
+      
+      if (selectedFiles.length > 0) {
+        document.getElementById('uploadHint').textContent = `${selectedFiles.length} 件選択中`;
+        if (!hasConfig) {
+          document.getElementById('uploadHint').textContent += ' (設定が必要)';
+        }
+      } else {
+        document.getElementById('uploadHint').textContent = '最大10枚まで同時にアップロードできます';
+      }
+    }
 
     btnUpload.addEventListener('click', async ()=> {
       const user = auth.currentUser; 
       if(!user || selectedFiles.length===0) return;
       
-      // Cloudinary設定チェック
-      if (!cloudinaryConfig.cloudName || !cloudinaryConfig.uploadPreset) {
+      // 設定チェック
+      if (!validateCloudinaryConfig()) {
         toast('Cloudinaryの設定が必要です。設定画面で入力してください。', 'error');
         show(settingsSection);
         return;
@@ -834,9 +1057,12 @@
         show(progressBox); 
         progressBar.style.width = '0%';
         btnUpload.disabled = true;
+        btnUpload.textContent = '⏳ アップロード中...';
 
         let completed = 0;
+        let failed = 0;
         const total = selectedFiles.length;
+        const results = [];
 
         for(let i = 0; i < selectedFiles.length; i++){
           const file = selectedFiles[i];
@@ -872,20 +1098,36 @@
               .collection('photos').add(docData);
             
             debug(`Firestore保存完了: ${docRef.id} - ${file.name}`);
+            results.push({ success: true, fileName: file.name });
+            completed++;
             
           } catch (fileError) {
             debug(`ファイルアップロードエラー ${file.name}: ${fileError.message}`);
-            toast(`${file.name} のアップロードに失敗しました`, 'error');
+            results.push({ success: false, fileName: file.name, error: fileError.message });
+            failed++;
           }
           
-          completed++;
-          const totalProgress = (completed / total) * 100;
+          const totalProgress = ((i + 1) / total) * 100;
           progressBar.style.width = `${totalProgress}%`;
         }
 
         await sleep(500);
-        debug('全アップロード完了');
-        toast(`${completed}件のアップロードが完了しました！`);
+        debug(`全アップロード完了: 成功${completed}件, 失敗${failed}件`);
+        
+        // 結果の通知
+        if (completed > 0 && failed === 0) {
+          toast(`${completed}件のアップロードが完了しました！`, 'success');
+        } else if (completed > 0 && failed > 0) {
+          toast(`${completed}件成功、${failed}件失敗しました。`, 'warning');
+        } else {
+          toast(`すべてのアップロードに失敗しました。`, 'error');
+        }
+        
+        // 失敗したファイルがある場合は詳細を表示
+        if (failed > 0) {
+          const failedFiles = results.filter(r => !r.success);
+          console.warn('失敗したファイル:', failedFiles);
+        }
         
       } catch(error) {
         console.error('アップロードエラー:', error);
@@ -895,9 +1137,10 @@
         hide(progressBox); 
         progressBar.style.width = '0%';
         btnUpload.disabled = false;
+        btnUpload.textContent = '⬆️ アップロード';
         selectedFiles = []; 
         fileInput.value = '';
-        document.getElementById('uploadHint').textContent = '最大10枚まで同時にアップロードできます';
+        updateUploadButton();
       }
     });
 
@@ -996,6 +1239,17 @@
         img.alt = item.name || 'photo';
         img.loading = 'lazy';
         
+        // 画像読み込みエラー対応
+        img.onerror = () => {
+          if (img.src !== item.url) {
+            debug(`サムネイル読み込み失敗、オリジナルにフォールバック: ${item.name}`);
+            img.src = item.url;
+          } else {
+            debug(`画像読み込み失敗: ${item.name}`);
+            img.alt = '画像を読み込めません';
+          }
+        };
+        
         // クリックでフルスクリーン表示
         img.onclick = () => {
           const originalIndex = allPhotos.findIndex(p => p.id === item.id);
@@ -1047,6 +1301,7 @@
     window.addEventListener('unhandledrejection', (e) => {
       debug(`Promise拒否: ${e.reason?.message || e.reason}`);
       console.error('Promise拒否:', e);
+      e.preventDefault(); // コンソールへの出力を抑制
     });
   </script>
 </body>
